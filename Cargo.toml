@@ -1,0 +1,13 @@
+[package]
+name = "redirector"
+version = "0.1.0"
+authors = ["Prashanna"]
+edition = "2021"
+
+[[bin]]
+name = "redirector"
+path = "src/main.rs"
+
+[dependencies]
+actix-web = "4.0"
+mysql = "*"
