@@ -2,7 +2,7 @@ use actix_web::{http::header, web::{self, Data}, App, HttpRequest, HttpResponse,
 use mysql::*;
 use std::sync::Mutex;
 use mysql::prelude::Queryable;
-
+use dotenv::dotenv;
 struct AppState {
     pool: Pool,
 }
@@ -25,17 +25,28 @@ async fn redirect(req: HttpRequest, data: web::Data<Mutex<AppState>>) -> Result<
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
+    dotenv().ok();
+    let db_url = format!("mysql://{}:{}@{}:{}/{}", 
+                std::env::var("DATABASE_USER").unwrap_or("root".to_string()),
+                std::env::var("DATABASE_PASSWORD").unwrap_or("".to_string()),
+                std::env::var("DATABASE_HOST").unwrap_or("localhost".to_string()),
+                std::env::var("DATABASE_PORT").unwrap_or("3306".to_string()),
+                std::env::var("DATABASE_NAME").unwrap_or("redirector".to_string())
+            );
+    println!("Connecting to {}", db_url);
     let pool = Pool::new(
-        Opts::from_url("mysql://root:0000@localhost:3306/redirector").unwrap(),
+        Opts::from_url(&db_url).unwrap(),
     )
     .unwrap();
+
+    let server_url = format!("{}:{}", std::env::var("SERVER_HOST").unwrap_or("localhost".to_string()), std::env::var("SERVER_PORT").unwrap_or("8080".to_string()));
 
     HttpServer::new(move || {
         App::new()
             .app_data(Data::new(Mutex::new(AppState { pool: pool.clone() })))
             .route("/{slug}", web::get().to(redirect))
     })
-    .bind("0.0.0.0:8080")?
+    .bind(server_url)?
     .run()
     .await
 }
