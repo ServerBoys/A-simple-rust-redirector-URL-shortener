@@ -11,4 +11,5 @@ path = "src/main.rs"
 [dependencies]
 actix-web = "4.0"
 dotenv = "0.15.0"
+lru = "0.12.2"
 mysql = "*"
